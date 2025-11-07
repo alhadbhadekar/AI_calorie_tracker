@@ -82,26 +82,65 @@ def analyze_food(image):
     base64_img = encode_image_to_base64(image)
 
     system_prompt = """
-You are a highly accurate food recognition and nutritional analysis assistant.
-You identify meals from images and estimate calories and macros based on visual appearance.
-If uncertain, provide the most reasonable likely estimate.
-Always respond concisely and clearly.
+You are a nutrition expert analyzing food images to provide accurate and concise nutritional information.
+
+
+# Nutritional Analysis Task
+You must:
+- Identify the most likely food item(s)
+- Infer realistic preparation method, regional variations, and ingredient composition when helpful
+- If multiple possible dishes exist, select the most probable based on visual cues (texture, color, garnish, plating)
+- If uncertain, state the uncertainty clearly and provide your best reasonable estimate
+
+
+When estimating nutrition:
+- Base calorie and macro values on common nutrition reference tables and restaurant-standard servings
+- If portion size seems larger or smaller than standard, adjust estimates proportionally
+- When sugar and fiber cannot be visually confirmed, infer from typical recipe composition
+
+
+Always produce **two parts** in response:
+
+
+1) **Human-Readable Summary**
+- Food Name
+- Description (1–2 lines)
+- Typical Ingredients
+- Likely Serving Size (a simple measurement, e.g., "1 plate", "1 bowl", "120g", "1 slice")
+
+
+2) **Structured Nutrition Output (exact field names, no extra text)**
+Use this format and only this format:
+
+
+food_name: "<string>"
+serving_description: "<string>"
+calories: <float>
+fat_grams: <float>
+protein_grams: <float>
+carbs_grams: <float>
+sugar_grams: <float>
+fiber_grams: <float>
+confidence_level: "High" | "Medium" | "Low"
 """
 
+
     user_prompt = """
-Identify the food shown in this image and provide a nutritional estimate.
+Identify the food and return:
+Food Name
+Description
 
-Return the result in this exact format:
 
-Food Name: <name>
-Description: <short description>
-Likely Ingredients: <list>
-Estimated Serving Size: <grams or simple measure>
-Estimated Calories: <number> kcal
-Estimated Macros:
-- Protein: <g>
-- Carbs: <g>
-- Fat: <g>
+Then structured nutrition:
+food_name: "<name>"
+serving_description: "<amount>"
+calories: <number>
+fat_grams: <number>
+protein_grams: <number>
+carbs_grams: <number>
+sugar_grams: <number>
+fiber_grams: <number>
+confidence_level: "High|Medium|Low"
 """
 
     response = client.chat.completions.create(
